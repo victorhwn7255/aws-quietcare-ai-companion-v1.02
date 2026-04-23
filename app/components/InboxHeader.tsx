@@ -1,19 +1,51 @@
 "use client";
 
+import { DrawerSnap } from "@/app/hooks/useDrawer";
+
 interface InboxHeaderProps {
   totalCount: number;
   unreadCount: number;
   isDetail: boolean;
   detailDay?: string;
   onBack: () => void;
+  isMobile?: boolean;
+  snap?: DrawerSnap;
+  onToggle?: () => void;
+  onPointerDown?: (e: React.PointerEvent) => void;
+  onPointerMove?: (e: React.PointerEvent) => void;
+  onPointerUp?: (e: React.PointerEvent) => void;
 }
 
-export function InboxHeader({ totalCount, unreadCount, isDetail, detailDay, onBack }: InboxHeaderProps) {
+export function InboxHeader({
+  totalCount, unreadCount, isDetail, detailDay, onBack,
+  isMobile, snap, onToggle, onPointerDown, onPointerMove, onPointerUp,
+}: InboxHeaderProps) {
+  const isClickable = isMobile && !isDetail;
+
   return (
-    <div className="flex items-center gap-1.5 bg-yellow text-black px-[18px] h-[62px] border-b-2 border-black shrink-0">
+    <div
+      className={`relative flex items-center gap-1.5 bg-yellow text-black px-[18px] h-[62px] border-b-2 border-black shrink-0 ${
+        isClickable ? "cursor-pointer select-none" : ""
+      }`}
+      onClick={isClickable ? onToggle : undefined}
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      aria-expanded={isMobile ? snap !== "collapsed" : undefined}
+      aria-label={isClickable ? "Toggle inbox" : undefined}
+      onKeyDown={isClickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle?.(); } } : undefined}
+      onPointerDown={isMobile ? onPointerDown : undefined}
+      onPointerMove={isMobile ? onPointerMove : undefined}
+      onPointerUp={isMobile ? onPointerUp : undefined}
+      style={isMobile ? { touchAction: "none" } : undefined}
+    >
+      {/* Drag handle indicator (mobile only) */}
+      {isMobile && !isDetail && (
+        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-black" aria-hidden="true" />
+      )}
+
       {isDetail ? (
         <button
-          onClick={onBack}
+          onClick={(e) => { e.stopPropagation(); onBack(); }}
           aria-label="Back to inbox"
           className="bg-black text-yellow border-2 border-black font-bold text-xs cursor-pointer mr-1"
           style={{ padding: "2px 10px" }}

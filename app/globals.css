@@ -64,6 +64,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  overscroll-behavior: none;
 }
 
 body {
@@ -176,6 +177,17 @@ body {
   .active\:shadow-none:active {
     box-shadow: 2px 2px 0px 0px #000000 !important;
   }
+}
+
+/* ==============================
+   Bottom-sheet drawer (mobile)
+   ============================== */
+.drawer-transition {
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.drawer-dragging {
+  transition: none !important;
 }
 
 /* ==============================
