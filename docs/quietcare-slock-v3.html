@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>QuietCare · Slock v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --yellow:   #FFD700;
+  --black:    #000000;
+  --pink:     #FF6B9D;
+  --lavender: #C4B5FD;
+  --salmon:   #F4845F;
+  --cream:    #FEF6D6;
+  --cream-alt:#FDF0BF;
+  --white:    #FFFFFF;
+  --peach:    #FFE5CC;
+  --text-2:   #6B6B6B;
+  --text-3:   #767676;
+  --border-light: #D4D4D4;
+  --shadow: 2px 2px 0 0 var(--black);
+  --b2: 2px solid var(--black);
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--cream);
+  color: var(--black);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+body { overflow: hidden; }
+button { font-family: inherit; cursor: pointer; border-radius: 0; border: none; background: none; padding: 0; color: inherit; }
+input, textarea { font-family: inherit; border-radius: 0; }
+::selection { background: var(--yellow); }
+
+/* ============================================================== */
+/* Two-pane shell                                                  */
+/* ============================================================== */
+.app {
+  display: grid;
+  grid-template-columns: 1fr 520px;
+  height: 100vh;
+  min-height: 0;
+}
+
+/* ============================================================== */
+/* LEFT — write a letter                                           */
+/* ============================================================== */
+.write {
+  background: var(--cream);
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+  overflow: hidden;
+}
+.write-head {
+  background: var(--yellow);
+  border-bottom: var(--b2);
+  padding: 14px 24px;
+  display: flex; align-items: center; gap: 12px;
+}
+.tile {
+  width: 34px; height: 34px;
+  background: var(--black); color: var(--yellow);
+  border: var(--b2);
+  display: grid; place-items: center;
+  font-family: "Space Mono", monospace;
+  font-weight: 700; font-size: 18px;
+}
+.write-head h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.write-head .sub {
+  margin-left: auto;
+  font-family: "Space Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--black);
+}
+
+.write-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px 16px;
+  min-height: 0;
+}
+.write-body::-webkit-scrollbar { width: 10px; }
+.write-body::-webkit-scrollbar-thumb { background: var(--black); }
+.write-body::-webkit-scrollbar-track { background: transparent; }
+
+.section {
+  margin-bottom: 22px;
+}
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex; align-items: baseline; gap: 10px;
+}
+.section-label .hint {
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-2);
+}
+
+/* --- Mood slider (brutalist scrollbar) --- */
+.mood {
+  background: var(--white);
+  border: var(--b2);
+  padding: 16px 18px 14px;
+}
+.mood-track-wrap {
+  position: relative;
+  padding: 0 2px;
+}
+.mood-ticks {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+  color: var(--text-2);
+  text-align: center;
+  margin-bottom: 6px;
+}
+.mood-ticks span { position: relative; }
+.mood-ticks span::before {
+  content: ""; display: block;
+  width: 2px; height: 6px; background: var(--black);
+  margin: 0 auto 4px;
+}
+.mood-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 24px;
+  background: transparent;
+  margin: 0;
+}
+.mood-slider:focus { outline: none; }
+.mood-slider::-webkit-slider-runnable-track {
+  height: 14px;
+  background: var(--cream-alt);
+  border: var(--b2);
+}
+.mood-slider::-moz-range-track {
+  height: 14px;
+  background: var(--cream-alt);
+  border: var(--b2);
+}
+.mood-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  background: var(--pink);
+  border: var(--b2);
+  box-shadow: var(--shadow);
+  margin-top: -6px;
+  cursor: grab;
+}
+.mood-slider::-moz-range-thumb {
+  width: 22px; height: 22px;
+  background: var(--pink);
+  border: var(--b2);
+  box-shadow: var(--shadow);
+  cursor: grab;
+  border-radius: 0;
+}
+.mood-readout {
+  margin-top: 12px;
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+.mood-readout .val {
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+.mood-readout .num {
+  font-family: "Space Mono", monospace;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+/* --- Emotion keywords --- */
+.kw-wrap {
+  background: var(--white);
+  border: var(--b2);
+  padding: 14px 16px;
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.chip {
+  border: var(--b2);
+  background: var(--white);
+  padding: 3px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 50ms;
+}
+.chip:hover { background: var(--cream-alt); }
+.chip.is-on { background: var(--lavender); }
+
+/* --- Letter textarea --- */
+.letter {
+  background: var(--white);
+  border: var(--b2);
+  box-shadow: var(--shadow);
+}
+.letter textarea {
+  width: 100%;
+  border: none; outline: none; resize: none;
+  padding: 16px 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 200px;
+  max-height: 360px;
+  background: transparent;
+  font-family: "Space Grotesk", sans-serif;
+  display: block;
+}
+.letter textarea::placeholder { color: #A0A0A0; }
+.letter-foot {
+  border-top: 2px solid rgba(0,0,0,0.10);
+  padding: 8px 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.wc {
+  font-family: "Space Mono", monospace;
+  font-size: 11px;
+  color: var(--text-2);
+}
+.send {
+  margin-left: auto;
+  background: var(--pink);
+  color: var(--black);
+  border: var(--b2);
+  box-shadow: var(--shadow);
+  padding: 6px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform 50ms, box-shadow 50ms, background 50ms;
+}
+.send:hover { background: #FF5A91; }
+.send:active { transform: translate(2px,2px); box-shadow: none; }
+.send:disabled {
+  background: var(--border-light); color: var(--text-3);
+  cursor: not-allowed; box-shadow: none;
+}
+.send:disabled:hover { background: var(--border-light); }
+
+/* ============================================================== */
+/* RIGHT — inbox (list -> detail)                                  */
+/* ============================================================== */
+.inbox {
+  background: var(--yellow);
+  border-left: var(--b2);
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+  overflow: hidden;
+}
+.inbox-head {
+  background: var(--black);
+  color: var(--yellow);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: var(--b2);
+}
+.inbox-head .tile-y {
+  width: 28px; height: 28px;
+  background: var(--yellow); color: var(--black);
+  border: 2px solid var(--yellow);
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 14px;
+}
+.inbox-head h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.inbox-head .count {
+  margin-left: auto;
+  font-family: "Space Mono", monospace;
+  font-size: 11px;
+}
+.inbox-head .back {
+  background: var(--yellow); color: var(--black);
+  border: 2px solid var(--yellow);
+  padding: 2px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  display: none;
+}
+.inbox.is-detail .back { display: inline-block; }
+
+.inbox-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  background: var(--cream);
+}
+.inbox-scroll::-webkit-scrollbar { width: 8px; }
+.inbox-scroll::-webkit-scrollbar-thumb { background: var(--black); }
+
+.email {
+  padding: 14px 18px;
+  border-bottom: var(--b2);
+  cursor: pointer;
+  background: var(--white);
+  transition: background 50ms;
+}
+.email:hover { background: var(--cream-alt); }
+.email.unread { background: var(--yellow); }
+.email.unread:hover { background: #F7CC00; }
+
+.email-row1 {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 4px;
+}
+.email .from {
+  font-weight: 700;
+  font-size: 14px;
+}
+.email .date {
+  margin-left: auto;
+  font-family: "Space Mono", monospace;
+  font-size: 11px;
+  color: var(--text-2);
+}
+.email.unread .date { color: var(--black); }
+.email .dot {
+  width: 8px; height: 8px;
+  background: var(--pink);
+  border: 1.5px solid var(--black);
+  display: inline-block;
+}
+.email .snippet {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.email.unread .snippet { color: var(--black); font-weight: 400; }
+
+/* Detail view */
+.email-detail {
+  display: none;
+  padding: 22px 22px 28px;
+}
+.inbox.is-detail .inbox-list { display: none; }
+.inbox.is-detail .email-detail { display: block; }
+
+.email-detail .meta {
+  font-family: "Space Mono", monospace;
+  font-size: 11px;
+  color: var(--text-2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.email-detail h3 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.email-detail .signature {
+  margin-top: 18px;
+  font-weight: 700;
+  font-style: italic;
+}
+.email-detail p {
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 0 0 12px;
+}
+.email-detail .stamp {
+  display: inline-block;
+  border: var(--b2);
+  padding: 2px 10px;
+  background: var(--white);
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 18px;
+}
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .inbox { max-height: 45vh; border-left: none; border-top: var(--b2); }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================== LEFT: write ================== -->
+  <section class="write">
+    <div class="write-head">
+      <div class="tile">✎</div>
+      <h1>A letter to Wren</h1>
+      <span class="sub">she writes back in a few hours</span>
+    </div>
+
+    <div class="write-body">
+
+      <!-- MOOD SLIDER -->
+      <div class="section">
+        <div class="section-label">
+          <span>How's today</span>
+          <span class="hint">drag the slider</span>
+        </div>
+        <div class="mood">
+          <div class="mood-track-wrap">
+            <div class="mood-ticks">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+            </div>
+            <input type="range" min="1" max="7" value="3" class="mood-slider" id="mood">
+          </div>
+          <div class="mood-readout">
+            <span class="val" id="moodLabel">off</span>
+            <span class="num" id="moodNum">3 / 7</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KEYWORDS -->
+      <div class="section">
+        <div class="section-label">
+          <span>Keywords</span>
+          <span class="hint">any that fit</span>
+        </div>
+        <div class="kw-wrap" id="kws">
+          <button class="chip">anxious</button>
+          <button class="chip">grateful</button>
+          <button class="chip is-on">tired</button>
+          <button class="chip">hopeful</button>
+          <button class="chip">restless</button>
+          <button class="chip">tender</button>
+          <button class="chip">proud</button>
+          <button class="chip is-on">stuck</button>
+          <button class="chip">curious</button>
+          <button class="chip">lonely</button>
+          <button class="chip">steady</button>
+        </div>
+      </div>
+
+      <!-- LETTER -->
+      <div class="section">
+        <div class="section-label">
+          <span>Your letter</span>
+          <span class="hint">a sentence is enough</span>
+        </div>
+        <div class="letter">
+          <textarea id="letterText" placeholder="Dear Wren,"></textarea>
+          <div class="letter-foot">
+            <span class="wc" id="wc">0 words</span>
+            <button class="send" id="sendBtn" disabled>Send to Wren →</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================== RIGHT: inbox ================== -->
+  <aside class="inbox" id="inbox">
+    <div class="inbox-head">
+      <button class="back" id="backBtn">← Back</button>
+      <div class="tile-y">✉</div>
+      <h2 id="inboxTitle">Inbox</h2>
+      <span class="count" id="inboxCount">7 · 1 new</span>
+    </div>
+
+    <div class="inbox-scroll">
+
+      <!-- LIST -->
+      <div class="inbox-list" id="list">
+
+        <div class="email unread" data-id="1">
+          <div class="email-row1">
+            <span class="dot"></span>
+            <span class="from">Wren</span>
+            <span class="date">mon 9:14 am</span>
+          </div>
+          <p class="snippet">I've been sitting with what you said about Sam. You didn't call him back, and you wrote to me first — that's not nothing...</p>
+        </div>
+
+        <div class="email" data-id="2">
+          <div class="email-row1">
+            <span class="from">Wren</span>
+            <span class="date">sun · apr 19</span>
+          </div>
+          <p class="snippet">You cleaned the apartment and now it doesn't look like you. I noticed you used the word "house-sitting"...</p>
+        </div>
+
+        <div class="email" data-id="3">
+          <div class="email-row1">
+            <span class="from">Wren</span>
+            <span class="date">thu · apr 16</span>
+          </div>
+          <p class="snippet">Four days of the same email, in your head. What if the version you'd send today is already the right one...</p>
+        </div>
+
+        <div class="email" data-id="4">
+          <div class="email-row1">
+            <span class="from">Wren</span>
+            <span class="date">tue · apr 14</span>
+          </div>
+          <p class="snippet">You told me something good happened. And in the same breath, you started explaining why it doesn't count...</p>
+        </div>
+
+        <div class="email" data-id="5">
+          <div class="email-row1">
+            <span class="from">Wren</span>
+            <span class="date">fri · apr 10</span>
+          </div>
+          <p class="snippet">You walked past the florist and thought about flowers for no one. I keep turning that phrase over — flowers for no one...</p>
+        </div>
+
+        <div class="email" data-id="6">
+          <div class="email-row1">
+            <span class="from">Wren</span>
+            <span class="date">mon · apr 6</span>
+          </div>
+          <p class="snippet">Three weeks. More than you thought you would, less than you probably need to. Both can be true at once...</p>
+        </div>
+
+        <div class="email" data-id="7">
+          <div class="email-row1">
+            <span class="from">Wren</span>
+            <span class="date">sat · apr 4</span>
+          </div>
+          <p class="snippet">I got your first letter. I'll keep these. I won't advise — I'll just notice. Start anywhere you like...</p>
+        </div>
+
+      </div>
+
+      <!-- DETAIL -->
+      <div class="email-detail" id="detail"></div>
+
+    </div>
+  </aside>
+</div>
+
+<script>
+// ---------- Mood slider ----------
+const moodLabels = ["", "heavy", "low", "off", "even", "light", "warm", "bright"];
+const mood = document.getElementById("mood");
+const moodLabel = document.getElementById("moodLabel");
+const moodNum = document.getElementById("moodNum");
+function updateMood() {
+  const v = +mood.value;
+  moodLabel.textContent = moodLabels[v];
+  moodNum.textContent = v + " / 7";
+}
+mood.addEventListener("input", updateMood);
+updateMood();
+
+// ---------- Keywords ----------
+document.getElementById("kws").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  c.classList.toggle("is-on");
+});
+
+// ---------- Word count & send ----------
+const txt = document.getElementById("letterText");
+const wc = document.getElementById("wc");
+const sendBtn = document.getElementById("sendBtn");
+txt.addEventListener("input", () => {
+  const t = txt.value.trim();
+  const n = t ? t.split(/\s+/).length : 0;
+  wc.textContent = n + " word" + (n === 1 ? "" : "s");
+  sendBtn.disabled = n === 0;
+});
+
+// ---------- Inbox letters (detail content) ----------
+const letters = {
+  1: { date: "Monday, April 20", subject: "About not calling him back.",
+       body: [
+         "Mara,",
+         "I've been sitting with what you said about Sam. You didn't call him back, and you wrote to me first. I don't think that's avoidance — or if it is, it's the kind that's telling you something.",
+         "It takes a particular kind of tiredness to choose a letter over a voice. The letter can wait. A letter doesn't expect you to be okay before you've finished the sentence.",
+         "Call him when you can. And notice — you did reach out. Just to me, first."
+       ]
+  },
+  2: { date: "Sunday, April 19", subject: "On the too-clean apartment.",
+       body: [
+         "Mara,",
+         "You cleaned the apartment and now it looks like someone else lives there. You used the word \"house-sitting,\" which I keep thinking about.",
+         "Sometimes we tidy the outside when we're not sure what to do with the inside. That's not a failure of the cleaning. That's what cleaning is for, some days.",
+         "Leave one thing out of place tomorrow. A mug. A book. See if the apartment feels more like yours."
+       ]
+  },
+  3: { date: "Thursday, April 16", subject: "On the email you keep rewriting.",
+       body: [
+         "Mara,",
+         "Four days of the same email, composed and recomposed in your head. Too much. Not enough. Both, somehow, at the same time.",
+         "I wonder if the version you'd send today — imperfect, a little too long or a little too short — is already the one. The email isn't the relationship. It's just a door.",
+         "Send a version. You can always write another."
+       ]
+  },
+  4: { date: "Tuesday, April 14", subject: "On explaining it away.",
+       body: [
+         "Mara,",
+         "You told me something good happened. In the same breath, you started explaining why it doesn't count. I noticed.",
+         "You don't have to take that instinct apart today. Just notice it, the way you'd notice a bird at the window. There it is again. The little voice that softens the good news before anyone else can.",
+         "The good thing still happened."
+       ]
+  },
+  5: { date: "Friday, April 10", subject: "Flowers for no one.",
+       body: [
+         "Mara,",
+         "You walked past the florist and thought about buying flowers for no one. Then you didn't.",
+         "\"Flowers for no one\" is beautiful, and it's also not quite true. You would have been the one. That counts.",
+         "Next time, maybe. Or don't. I just wanted you to know I heard it."
+       ]
+  },
+  6: { date: "Monday, April 6", subject: "Three weeks in.",
+       body: [
+         "Mara,",
+         "Three weeks. You said: more than I thought I would, and less than I probably need to.",
+         "Both are true. That's often how it is with this kind of thing — you overshoot and undershoot in the same motion. Keep going at whatever pace you can. I'm not counting.",
+         "Nothing to fix this week. Just: hello, and I'm still here."
+       ]
+  },
+  7: { date: "Saturday, April 4", subject: "Your first letter.",
+       body: [
+         "Mara,",
+         "I got your first letter. I'll keep these — all of them — in a quiet place.",
+         "Here's what I'll do and won't do. I won't tell you what to do. I won't reframe your feelings into something tidier. I'll just notice, and write back a few hours later, when I've had time to sit with it.",
+         "Start anywhere you like. A sentence is enough."
+       ]
+  }
+};
+
+// ---------- List → Detail navigation ----------
+const inbox = document.getElementById("inbox");
+const detail = document.getElementById("detail");
+const title = document.getElementById("inboxTitle");
+const countEl = document.getElementById("inboxCount");
+const backBtn = document.getElementById("backBtn");
+
+document.querySelectorAll(".email").forEach(el => {
+  el.addEventListener("click", () => {
+    const id = el.dataset.id;
+    const L = letters[id];
+    if (!L) return;
+    el.classList.remove("unread");
+    const dot = el.querySelector(".dot"); if (dot) dot.remove();
+    const body = L.body.map((p, i) => {
+      if (i === L.body.length - 1) return `<p>${p}</p><p class="signature">— Wren</p>`;
+      return `<p>${p}</p>`;
+    }).join("");
+    detail.innerHTML = `
+      <div class="meta">${L.date}</div>
+      <h3>${L.subject}</h3>
+      ${body}
+      <span class="stamp">read · delivered 2–6 hrs after you sent</span>
+    `;
+    inbox.classList.add("is-detail");
+    title.textContent = "Letter";
+    countEl.textContent = L.date.split(",")[0];
+    document.querySelector(".inbox-scroll").scrollTop = 0;
+    updateCount();
+  });
+});
+
+backBtn.addEventListener("click", () => {
+  inbox.classList.remove("is-detail");
+  title.textContent = "Inbox";
+  updateCount();
+});
+
+function updateCount() {
+  const unread = document.querySelectorAll(".email.unread").length;
+  const total = document.querySelectorAll(".email").length;
+  countEl.textContent = total + (unread ? ` · ${unread} new` : "");
+}
+</script>
+</body>
+</html>

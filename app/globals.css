@@ -1,26 +1,188 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Colors — from HTML canonical reference */
+  --color-yellow: #FFD700;
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+  --color-pink: #FF6B9D;
+  --color-lavender: #C4B5FD;
+  --color-salmon: #F4845F;
+  --color-cream: #FEF6D6;
+  --color-cream-alt: #FDF0BF;
+  --color-peach: #FFE5CC;
+  --color-cyan: #5BC0EB;
+  --color-teal: #2EC4B6;
+  --color-success: #2DC653;
+  --color-warning: #FF9F1C;
+  --color-error: #E63946;
+  --color-text-2: #6B6B6B;
+  --color-text-3: #767676;
+  --color-border-light: #D4D4D4;
+
+  /* Typography — fonts set via CSS variables from next/font */
+  --font-sans: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+
+  /* Font sizes — from design guide */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+
+  /* Font weights — 400 and 700 only */
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+
+  /* Shadows — one shadow only: hard offset, zero blur */
+  --shadow: 2px 2px 0px 0px #000000;
+  --shadow-brutal: 2px 2px 0px 0px #000000;
+  --shadow-none: none;
+
+  /* Border radius — 0px universally */
+  --radius-none: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-full: 9999px;
+
+  /* Border widths */
+  --border-width-default: 2px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream);
+  color: var(--color-black);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  /* iOS safe-area insets */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+::selection {
+  background: var(--color-yellow);
+}
+
+/* ==============================
+   Focus rings — 2px pink, keyboard only
+   ============================== */
+*:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 1px;
+}
+
+/* Slider needs special treatment — focus ring on the track, not the thumb */
+.mood-slider:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 2px;
+}
+
+/* ==============================
+   Brutal slider — cross-browser
+   ============================== */
+.mood-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  background: transparent;
+  margin: 0;
+  cursor: pointer;
+}
+
+.mood-slider:focus {
+  outline: none;
+}
+
+.mood-slider:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 2px;
+}
+
+.mood-slider::-webkit-slider-runnable-track {
+  height: 14px;
+  background: var(--color-cream-alt);
+  border: 2px solid var(--color-black);
+}
+
+.mood-slider::-moz-range-track {
+  height: 14px;
+  background: var(--color-cream-alt);
+  border: 2px solid var(--color-black);
+}
+
+.mood-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  background: var(--color-pink);
+  border: 2px solid var(--color-black);
+  box-shadow: 2px 2px 0px 0px var(--color-black);
+  margin-top: -6px;
+  cursor: grab;
+  border-radius: 0;
+}
+
+.mood-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: var(--color-pink);
+  border: 2px solid var(--color-black);
+  box-shadow: 2px 2px 0px 0px var(--color-black);
+  cursor: grab;
+  border-radius: 0;
+}
+
+/* ==============================
+   prefers-reduced-motion
+   ============================== */
+@media (prefers-reduced-motion: reduce) {
+  .mood-slider::-webkit-slider-thumb {
+    box-shadow: none;
+  }
+  .mood-slider::-moz-range-thumb {
+    box-shadow: none;
+  }
+  /* Suppress stamp-press transform on Send button and other active states */
+  * {
+    transition-duration: 0ms !important;
+  }
+  .active\:translate-x-0\.5:active,
+  .active\:translate-y-0\.5:active {
+    transform: none !important;
+  }
+  .active\:shadow-none:active {
+    box-shadow: 2px 2px 0px 0px #000000 !important;
+  }
+}
+
+/* ==============================
+   Mobile responsive — textarea
+   ============================== */
+@media (max-width: 600px) {
+  textarea {
+    min-height: 120px !important;
+  }
 }
