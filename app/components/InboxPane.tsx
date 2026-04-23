@@ -18,7 +18,7 @@ interface InboxPaneProps {
 
 export function InboxPane({ letters, currentLetter, unreadCount, openLetter, closeLetter }: InboxPaneProps) {
   const detailDay = currentLetter ? formatDayName(currentLetter.date) : undefined;
-  const { snap, setSnap, isMobile, isDragging, drawerRef, drawerStyle, handlePointerDown, handlePointerMove, handlePointerUp } = useDrawer();
+  const { snap, setSnap, isMobile, isDragging, drawerRef, contentRef, drawerStyle, contentStyle, handlePointerDown, handlePointerMove, handlePointerUp } = useDrawer();
 
   // Track previous snap for restoring after letter detail closes
   const prevSnapRef = useRef<DrawerSnap>("half");
@@ -76,7 +76,9 @@ export function InboxPane({ letters, currentLetter, unreadCount, openLetter, clo
         onPointerUp={handlePointerUp}
       />
       <div
-        className="flex-1 min-h-0 overflow-hidden"
+        ref={isMobile ? contentRef : undefined}
+        className="flex flex-col flex-1 min-h-0 overflow-hidden"
+        style={isMobile ? contentStyle : undefined}
         aria-hidden={isCollapsed}
       >
         {currentLetter ? (

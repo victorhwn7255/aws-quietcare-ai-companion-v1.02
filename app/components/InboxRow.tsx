@@ -52,7 +52,7 @@ export function InboxRow({ letter, onClick }: InboxRowProps) {
       onClick={isFailed ? undefined : onClick}
       disabled={isFailed}
       aria-label={ariaLabel}
-      className={`w-full text-left border-b-2 border-black transition-colors duration-[50ms] ${bgClasses} ${
+      className={`block w-full text-left border-b-2 border-black transition-colors duration-[50ms] ${bgClasses} ${
         isFailed ? "cursor-default" : "cursor-pointer"
       }`}
       style={{ padding: "14px 18px" }}

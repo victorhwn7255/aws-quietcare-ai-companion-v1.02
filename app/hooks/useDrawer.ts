@@ -4,6 +4,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 
 export type DrawerSnap = "collapsed" | "half" | "full";
 
+const DRAG_THRESHOLD = 5; // px before a touch becomes a drag
+
 function getTranslateY(snap: DrawerSnap): number {
   const vh = window.innerHeight;
   switch (snap) {
@@ -13,13 +15,32 @@ function getTranslateY(snap: DrawerSnap): number {
   }
 }
 
+function getContentMaxH(snap: DrawerSnap): string {
+  switch (snap) {
+    case "collapsed": return "0px";
+    case "half":      return "calc(50dvh - 62px)";
+    case "full":      return "calc(100dvh - 62px)";
+  }
+}
+
 export function useDrawer() {
   const [snap, setSnap] = useState<DrawerSnap>("collapsed");
   const [isMobile, setIsMobile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
   const drawerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Sync state into refs so pointer callbacks are always stable (no stale closures)
+  const snapRef = useRef(snap);
+  snapRef.current = snap;
+  const isMobileRef = useRef(isMobile);
+  isMobileRef.current = isMobile;
+
   const dragState = useRef({
+    active: false,
+    dragging: false,
+    pointerId: 0,
     startY: 0,
     startTranslateY: 0,
     currentTranslateY: 0,
@@ -42,23 +63,28 @@ export function useDrawer() {
 
   // Recalculate on resize (orientation change, etc.)
   useEffect(() => {
-    if (!isMobile || !drawerRef.current || isDragging) return;
+    if (!isMobile || isDragging) return;
     const handler = () => {
       if (drawerRef.current) {
         drawerRef.current.style.transform = `translateY(${getTranslateY(snap)}px)`;
+      }
+      if (contentRef.current) {
+        contentRef.current.style.maxHeight = getContentMaxH(snap);
       }
     };
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, [isMobile, snap, isDragging]);
 
-  // Pointer handlers
+  // Pointer handlers — all use refs, stable identity
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (!isMobile || e.button !== 0) return;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    if (!isMobileRef.current || e.button !== 0) return;
 
-    const currentY = getTranslateY(snap);
+    const currentY = getTranslateY(snapRef.current);
     dragState.current = {
+      active: true,
+      dragging: false,
+      pointerId: e.pointerId,
       startY: e.clientY,
       startTranslateY: currentY,
       currentTranslateY: currentY,
@@ -66,35 +92,54 @@ export function useDrawer() {
       lastMoveY: e.clientY,
       velocity: 0,
     };
-    setIsDragging(true);
-  }, [isMobile, snap]);
+  }, []);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging || !drawerRef.current) return;
+    const ds = dragState.current;
+    if (!ds.active) return;
+
+    // Only begin dragging after exceeding threshold (preserves click for taps)
+    if (!ds.dragging) {
+      if (Math.abs(e.clientY - ds.startY) < DRAG_THRESHOLD) return;
+      try {
+        (e.currentTarget as HTMLElement).setPointerCapture(ds.pointerId);
+      } catch { /* pointer may already be released */ }
+      ds.dragging = true;
+      setIsDragging(true);
+    }
+
+    if (!drawerRef.current) return;
 
     const vh = window.innerHeight;
-    const deltaY = e.clientY - dragState.current.startY;
-    const newY = Math.max(0, Math.min(vh - 62, dragState.current.startTranslateY + deltaY));
+    const deltaY = e.clientY - ds.startY;
+    const newY = Math.max(0, Math.min(vh - 62, ds.startTranslateY + deltaY));
 
-    // Track velocity (px/ms)
-    const dt = e.timeStamp - dragState.current.lastMoveTime;
+    // Track velocity (positive = downward)
+    const dt = e.timeStamp - ds.lastMoveTime;
     if (dt > 0) {
-      dragState.current.velocity = (e.clientY - dragState.current.lastMoveY) / dt;
+      ds.velocity = (e.clientY - ds.lastMoveY) / dt;
     }
-    dragState.current.lastMoveTime = e.timeStamp;
-    dragState.current.lastMoveY = e.clientY;
-    dragState.current.currentTranslateY = newY;
+    ds.lastMoveTime = e.timeStamp;
+    ds.lastMoveY = e.clientY;
+    ds.currentTranslateY = newY;
 
-    // Direct DOM update for 60fps (no React re-render)
+    // Direct DOM updates for 60fps
     drawerRef.current.style.transform = `translateY(${newY}px)`;
-  }, [isDragging]);
+    if (contentRef.current) {
+      contentRef.current.style.maxHeight = `${Math.max(0, vh - newY - 62)}px`;
+    }
+  }, []);
 
   const handlePointerUp = useCallback(() => {
-    if (!isDragging) return;
+    const ds = dragState.current;
+    ds.active = false;
+
+    if (!ds.dragging) return; // Was a tap — let click handler deal with it
+    ds.dragging = false;
     setIsDragging(false);
 
-    const currentY = dragState.current.currentTranslateY;
-    const velocity = dragState.current.velocity; // positive = downward
+    const currentY = ds.currentTranslateY;
+    const velocity = ds.velocity; // positive = downward
     const vh = window.innerHeight;
 
     const snapPoints: [DrawerSnap, number][] = [
@@ -105,10 +150,11 @@ export function useDrawer() {
 
     let targetSnap: DrawerSnap;
     if (Math.abs(velocity) > 0.5) {
-      // Flick: snap in direction of velocity
       if (velocity > 0) {
+        // Flicking down = collapsing
         targetSnap = currentY < vh * 0.25 ? "half" : "collapsed";
       } else {
+        // Flicking up = expanding
         targetSnap = currentY > vh * 0.75 ? "half" : "full";
       }
     } else {
@@ -125,8 +171,13 @@ export function useDrawer() {
       targetSnap = closest;
     }
 
+    // Clear DOM-set maxHeight so React style takes over on next render
+    if (contentRef.current) {
+      contentRef.current.style.maxHeight = "";
+    }
+
     setSnap(targetSnap);
-  }, [isDragging]);
+  }, []);
 
   // Inline style for the drawer
   const drawerStyle = useMemo((): React.CSSProperties => {
@@ -137,13 +188,21 @@ export function useDrawer() {
     };
   }, [isMobile, snap, isDragging]);
 
+  // Inline style for the content area (constrains scroll to visible portion)
+  const contentStyle = useMemo((): React.CSSProperties => {
+    if (!isMobile) return {};
+    return { maxHeight: getContentMaxH(snap) };
+  }, [isMobile, snap]);
+
   return {
     snap,
     setSnap,
     isMobile,
     isDragging,
     drawerRef,
+    contentRef,
     drawerStyle,
+    contentStyle,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
