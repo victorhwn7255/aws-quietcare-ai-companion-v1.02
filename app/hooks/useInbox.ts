@@ -18,7 +18,8 @@ function parseReply(reply: string) {
   const bodyParagraphs = reply
     .split(/\n\n+/)
     .map((p) => p.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((p) => !/^—\s*Iris$/i.test(p));
   const subject = "a letter back";
   return { subject, bodyParagraphs };
 }

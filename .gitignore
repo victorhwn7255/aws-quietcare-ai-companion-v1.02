@@ -34,6 +34,10 @@ yarn-error.log*
 .env
 .env.production
 
+# Backend build artifacts
+backend/package/
+backend/*.zip
+
 # Vercel
 .vercel
 

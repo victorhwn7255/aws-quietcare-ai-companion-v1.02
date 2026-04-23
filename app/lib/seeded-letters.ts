@@ -4,7 +4,7 @@ export const seededLetters: Letter[] = [
   {
     id: "1",
     date: new Date("2026-04-20T09:14:00").toISOString(),
-    state: "unread",
+    state: "read",
     subject: "About not calling him back.",
     body: [
       "Mara,",
