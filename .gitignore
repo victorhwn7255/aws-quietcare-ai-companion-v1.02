@@ -38,6 +38,9 @@ yarn-error.log*
 backend/package/
 backend/*.zip
 
+# Deploy script (contains AWS resource IDs)
+deploy.sh
+
 # Vercel
 .vercel
 
