@@ -34,9 +34,9 @@ export default function Home() {
   }, [draft, inbox]);
 
   return (
-    <div className="grid grid-cols-[1fr_520px] h-screen min-h-0 max-[900px]:grid-cols-[1fr] max-[900px]:grid-rows-[1fr_auto]">
+    <div className="grid grid-cols-[1fr_520px] h-screen min-h-0 max-[900px]:grid-cols-[1fr]">
       {/* ========== LEFT: Write ========== */}
-      <section className="flex flex-col min-w-0 min-h-0 overflow-hidden bg-cream">
+      <section className="flex flex-col min-w-0 min-h-0 overflow-hidden bg-cream max-[900px]:pb-[62px]">
         <WritePane
           mood={draft.mood}
           setMood={draft.setMood}
@@ -52,7 +52,7 @@ export default function Home() {
       </section>
 
       {/* ========== RIGHT: Inbox ========== */}
-      <aside className="flex flex-col min-w-0 min-h-0 overflow-hidden bg-yellow border-l-2 border-black max-[900px]:border-l-0 max-[900px]:border-t-2 max-[900px]:max-h-[45vh]">
+      <aside className="flex flex-col min-w-0 min-h-0 overflow-hidden bg-yellow border-l-2 border-black max-[900px]:contents">
         <InboxPane
           letters={inbox.letters}
           currentLetter={inbox.currentLetter}

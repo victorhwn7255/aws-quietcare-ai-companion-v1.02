@@ -179,6 +179,17 @@ body {
 }
 
 /* ==============================
+   Bottom-sheet drawer (mobile)
+   ============================== */
+.drawer-transition {
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.drawer-dragging {
+  transition: none !important;
+}
+
+/* ==============================
    Mobile responsive — textarea
    ============================== */
 @media (max-width: 600px) {
