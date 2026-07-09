@@ -18,18 +18,37 @@ From the project root:
 
 ```bash
 cd backend
-mkdir -p package
-pip install -r requirements.txt --target ./package
-cp lambda_function.py system_prompt.py ./package/
+rm -rf package quietcare-lambda.zip          # start clean (avoids stale "already exists" skips)
+
+# IMPORTANT: this function runs Linux x86_64 / Python 3.13. If you build on a Mac,
+# force pip to fetch wheels for THAT target — otherwise compiled deps (pydantic-core,
+# jiter) ship as macOS/wrong-Python binaries and the function crashes on cold start
+# with "No module named 'pydantic_core._pydantic_core'".
+# (Confirm the target: aws lambda get-function-configuration --function-name
+#  quietcare-reflect --query '{Runtime:Runtime,Arch:Architectures}')
+pip install \
+  --platform manylinux2014_x86_64 \
+  --implementation cp --python-version 3.13 --only-binary=:all: \
+  --target ./package \
+  -r requirements.txt
+
+cp lambda_function.py system_prompt.py rag.py rag_prompt.py ./package/
+cp rag/knowledge_base.json ./package/         # RAG vector store (built by rag/build_index.py)
 cd package
 zip -r ../quietcare-lambda.zip .
 cd ..
 rm -rf package
 ```
 
-You now have `backend/quietcare-lambda.zip` — a ~2 MB file containing your
-Lambda code plus the OpenAI SDK and its dependencies. Keep this file; you'll
-upload it in Step 3.
+You now have `backend/quietcare-lambda.zip` — a ~5 MB file containing your
+Lambda code (Iris + the RAG module), the `knowledge_base.json` vector store,
+plus the OpenAI SDK and its dependencies. Keep this file; you'll upload it in
+Step 3.
+
+> **RAG note:** `rag.py`, `rag_prompt.py`, and `knowledge_base.json` must all be
+> in the zip. Rebuild `knowledge_base.json` first if the source docs changed:
+> `cd backend/rag && OPENAI_API_KEY=sk-... python build_index.py`. No new runtime
+> dependencies are needed — RAG uses the OpenAI SDK already in `requirements.txt`.
 
 (If you prefer a one-liner later for updates: the script above.)
 

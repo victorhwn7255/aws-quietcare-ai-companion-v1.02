@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { MoodSlider } from "./MoodSlider";
 import { KeywordChips } from "./KeywordChips";
 import { LetterComposer } from "./LetterComposer";
@@ -26,12 +27,20 @@ export function WritePane({
       <div className="flex items-center gap-1.5 bg-white border-b-2 border-black px-6 h-[62px]">
         <img src="/logo-quietpal.svg" alt="QuietPal" width={38} height={38} />
         <h1 className="text-xl font-bold m-0">QuietPal</h1>
-        <div className="ml-auto flex items-center gap-1.5 border border-black bg-cream px-2 py-0.5 font-mono text-[9px] tracking-[0.04em]">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-success border border-black" />
-          </span>
-          a safe space to unwind
+        <div className="ml-auto flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-1.5 border border-black bg-cream px-2 py-0.5 font-mono text-[9px] tracking-[0.04em]">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-success border border-black" />
+            </span>
+            a safe space to unwind
+          </div>
+          <Link
+            href="/jobs"
+            className="border-2 border-black bg-lavender font-bold text-xs px-3 py-1 shadow-brutal hover:bg-[#B3A1FC] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+          >
+            Jobs KB →
+          </Link>
         </div>
       </div>
 

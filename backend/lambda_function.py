@@ -71,6 +71,11 @@ def lambda_handler(event: dict, context: Any) -> dict:
     except json.JSONDecodeError:
         return _error(400, "Invalid JSON body", cors_headers)
 
+    # ── Route by payload shape: a jobs-KB question ({"query": ...}) goes to the
+    #    RAG handler; a letter ({"messages": [...]}) goes to Iris (unchanged). ──
+    if "query" in body:
+        return _handle_rag(body, cors_headers)
+
     messages = body.get("messages")
     if not isinstance(messages, list) or len(messages) == 0:
         return _error(400, "Request must include a non-empty 'messages' array", cors_headers)
@@ -117,6 +122,32 @@ def call_openai(messages: list[dict]) -> str:
     )
 
     return response.choices[0].message.content or ""
+
+
+# ─── RAG: jobs knowledge base ──────────────────────────────────
+
+def _handle_rag(body: dict, cors_headers: dict) -> dict:
+    """Answer a jobs-KB question via retrieval-augmented generation.
+
+    Fully separate from Iris: different module (`rag`), different system prompt.
+    Imported lazily so a problem here can never affect the letter flow."""
+    query = body.get("query")
+    if not isinstance(query, str) or not query.strip():
+        return _error(400, "Request must include a non-empty 'query' string", cors_headers)
+
+    try:
+        from rag import answer_question
+        result = answer_question(query.strip())
+    except Exception as exc:
+        # Log server-side, return a generic message to the client.
+        print(f"[error] RAG call failed: {type(exc).__name__}: {exc}")
+        return _error(500, "The jobs assistant couldn't respond just now. Try again in a moment.", cors_headers)
+
+    return {
+        "statusCode": 200,
+        "headers": {**cors_headers, "Content-Type": "application/json"},
+        "body": json.dumps(result),
+    }
 
 
 # ─── Utilities ─────────────────────────────────────────────────

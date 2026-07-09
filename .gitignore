@@ -53,3 +53,5 @@ next-env.d.ts
 .idea/
 prompts/
 tasks/
+docs/ai-ml-jobs/
+backend/rag/__pycache__/
